@@ -6,7 +6,7 @@ from .models import Recipe, Tag, Ingredient, RecipeIngredients
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'author', 'title', 'text', 'pub_date')
     search_fields = ('title',)
-    list_filter = ('tags', 'author',)
+    list_filter = ('tags', 'author', 'title')
     empty_value_display = '-пусто-'
 
 
@@ -20,7 +20,7 @@ class TagAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'product', 'unit')
     search_fields = ('product',)
-    list_filter = ('unit',)
+    list_filter = ('unit', 'product')
     empty_value_display = '-пусто-'
 
 

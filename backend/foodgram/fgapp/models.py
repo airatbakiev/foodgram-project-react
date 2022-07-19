@@ -3,7 +3,7 @@ from users.models import User
 
 
 class Tag(models.Model):
-    tagname = models.TextField('Название')
+    tagname = models.CharField('Название', max_length=20)
     slug = models.SlugField('Слаг')
 
     class Meta:
@@ -32,7 +32,7 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes'
     )
-    title = models.TextField('Название', max_length=200)
+    title = models.CharField('Название', max_length=200)
     image = models.ImageField(
         'Фото',
         upload_to='fgapp/',
