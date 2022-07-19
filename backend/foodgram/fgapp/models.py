@@ -7,7 +7,6 @@ class Tag(models.Model):
     slug = models.SlugField('Слаг')
 
     class Meta:
-        # ordering = ['-pub_date']
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -18,10 +17,8 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     product = models.CharField('Ингредиент', max_length=200)
     unit = models.CharField('Единица измерения', max_length=20)
-    quantity = models.FloatField('Количество')
 
     class Meta:
-        # ordering = ['-pub_date']
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -42,14 +39,11 @@ class Recipe(models.Model):
         blank=True
     )
     text = models.TextField('Описание')
-    content = models.ForeignKey(
+    ingredients = models.ManyToManyField(
         Ingredient,
-        on_delete=models.PROTECT
+        through='RecipeIngredients'
     )
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.PROTECT
-    )
+    tags = models.ManyToManyField(Tag)
     duration = models.IntegerField('Время приготовления')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
@@ -60,3 +54,15 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class RecipeIngredients(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.PROTECT
+    )
+    quantity = models.FloatField('Количество')

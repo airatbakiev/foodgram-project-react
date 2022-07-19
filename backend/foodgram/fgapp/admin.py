@@ -1,38 +1,35 @@
 from django.contrib import admin
 
-from .models import Recipe, Tag, Ingredient
+from .models import Recipe, Tag, Ingredient, RecipeIngredients
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    # Перечисляем поля, которые должны отображаться в админке
-    list_display = ('pk', 'title', 'text', 'duration', 'pub_date')
-    # Добавляем интерфейс для поиска по тексту постов
+    list_display = ('pk', 'author', 'title', 'text', 'pub_date')
     search_fields = ('title',)
-    # Добавляем возможность фильтрации по дате
-    list_filter = ('pub_date',)
+    list_filter = ('tags', 'author',)
     empty_value_display = '-пусто-'
 
 
 class TagAdmin(admin.ModelAdmin):
-    # Перечисляем поля, которые должны отображаться в админке
     list_display = ('pk', 'tagname', 'slug')
-    # Добавляем интерфейс для поиска по тексту постов
     search_fields = ('tagname',)
-    # Добавляем возможность фильтрации по дате
-    list_filter = ('tagname',)
+    list_filter = ('slug',)
     empty_value_display = '-пусто-'
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    # Перечисляем поля, которые должны отображаться в админке
-    list_display = ('pk', 'product', 'unit', 'quantity')
-    # Добавляем интерфейс для поиска по тексту постов
+    list_display = ('pk', 'product', 'unit')
     search_fields = ('product',)
-    # Добавляем возможность фильтрации по дате
-    list_filter = ('product',)
+    list_filter = ('unit',)
     empty_value_display = '-пусто-'
 
 
+class RecipeIngredientsAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'recipe', 'ingredient', 'quantity')
+    search_fields = ('recipe', 'ingredient')
+
+
 admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(RecipeIngredients, RecipeIngredientsAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
