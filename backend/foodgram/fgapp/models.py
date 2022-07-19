@@ -4,6 +4,7 @@ from users.models import User
 
 class Tag(models.Model):
     tagname = models.CharField('Название', max_length=20)
+    color = models.CharField('Цвет', help_text='В формате НЕХ', max_length=7)
     slug = models.SlugField('Слаг')
 
     class Meta:
