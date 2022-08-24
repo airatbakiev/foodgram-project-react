@@ -4,31 +4,12 @@ from django.db import models
 from django.db.models import UniqueConstraint
 
 
-class UserRoles:
-    USER = 'user'
-    ADMIN = 'admin'
-    USER_ROLES = (
-        (USER, USER),
-        (ADMIN, ADMIN),
-    )
-
-
 class User(AbstractUser):
+    USERNAME_FIELD = 'email'
     email = models.EmailField(
         max_length=254,
         unique=True,
         verbose_name='Электронная почта',
-    )
-    role = models.CharField(
-        max_length=9,
-        choices=UserRoles.USER_ROLES,
-        default=UserRoles.USER,
-        verbose_name='Права доступа',
-    )
-    confirmation_code = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name='Код подтверждения',
     )
     username = models.CharField(
         unique=True,
@@ -46,6 +27,7 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='Фамилия',
     )
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = 'Пользователь',
@@ -55,16 +37,27 @@ class User(AbstractUser):
             UniqueConstraint(fields=['username', ], name='username')
         ]
 
-    @property
-    def is_admin(self):
-        return (
-            self.role == UserRoles.ADMIN
-            or self.is_staff or self.is_superuser
-        )
-
-    @property
-    def is_user(self):
-        return self.role == UserRoles.USER
-
     def __str__(self):
-        return self.username
+        return f'{self.first_name} {self.last_name}'
+
+
+class Subscribe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriber'
+    )
+    subscribing = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscribing'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка',
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'subscribing'], name='unique_subscribe'
+            ),
+        ]
