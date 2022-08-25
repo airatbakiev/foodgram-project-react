@@ -1,5 +1,7 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+
 from users.models import User
 
 
@@ -51,7 +53,10 @@ class Recipe(models.Model):
         through='RecipeTags',
         blank=True
     )
-    cooking_time = models.IntegerField('Время приготовления')
+    cooking_time = models.IntegerField(
+        'Время приготовления',
+        validators=[MinValueValidator(1),]
+    )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
@@ -78,7 +83,12 @@ class RecipeIngredients(models.Model):
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'
-        verbose_name_plural = 'Количество ингредиентов к рецептам'
+        verbose_name_plural = 'Количество ингредиентов к рецепту'
+        constraints = [
+            UniqueConstraint(
+                fields=['recipe', 'ingredient'], name='unique_amount'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.ingredient} {self.amount}'
@@ -98,7 +108,12 @@ class RecipeTags(models.Model):
 
     class Meta:
         verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Теги рецептов'
+        verbose_name_plural = 'Теги рецепта'
+        constraints = [
+            UniqueConstraint(
+                fields=['recipe', 'tag'], name='unique_tag'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.recipe} {self.tag}'

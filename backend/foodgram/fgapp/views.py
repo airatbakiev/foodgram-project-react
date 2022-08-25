@@ -1,16 +1,16 @@
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, permissions, filters, mixins
+from rest_framework import viewsets, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView, status, Http404
-from .models import RecipeIngredients
+from rest_framework.views import status, Http404
 
-from fgapp.permissions import AuthorOrReadOnly, RecipeAuthor, SubscribeOwner
+from fgapp import services
 from fgapp.filters import RecipeFilterSet, IngredientSearchFilter
-from fgapp.models import Recipe, Tag, Ingredient, FavoriteRecipe, ShoppingCart
+from fgapp.models import (Recipe, Tag, Ingredient, FavoriteRecipe,
+                          ShoppingCart)
 from fgapp.pagination import CustomPageNumberPagination
+from fgapp.permissions import AuthorOrReadOnly, RecipeAuthor, SubscribeOwner
 from fgapp.serializers import (RecipeGetSerializer, RecipePostSerializer,
                                TagSerializer, IngredientSerializer,
                                SubscribeSerializer, FavoriteRecipeSerializer,
@@ -30,12 +30,6 @@ class CreateDeleteModelViewSet(
     pass
 
 
-class HealthAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    def get(self, request):
-        return Response({'message': 'success'})
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     pagination_class = CustomPageNumberPagination
@@ -46,7 +40,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return RecipeGetSerializer
         return RecipePostSerializer
-    
+
     def get_queryset(self):
         queryset = Recipe.objects.all()
         is_favorited = self.request.query_params.get('is_favorited')
@@ -81,7 +75,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
     
     def partial_update(self, request, pk=None):
-        recipe = get_object_or_404(self.queryset, pk=pk)
+        recipe = get_object_or_404(Recipe, pk=pk)
         serializer = self.get_serializer(recipe, data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -94,31 +88,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes = [permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-        user_cart = self.request.user.shopping_carts.all()
-        recipe_id_list = user_cart.values_list('recipe', flat=True)
-        ingr_amounts = RecipeIngredients.objects.filter(
-            recipe__in=recipe_id_list).select_related('ingredient')
-        unique_list=[]
-        ingredients = {}
-        for item in ingr_amounts:
-            name = (
-                item.ingredient.name + ' ('+
-                item.ingredient.measurement_unit + ') - '
-            ).capitalize()
-            if item.ingredient.id in unique_list:
-                ingredients[name] += item.amount
-            else:
-                ingredients[name] = item.amount
-                unique_list.append(item.ingredient.id)
-        cart_string = (
-            'Список покупок.\n' + 'Выбрано рецептов: '
-            + str(user_cart.count()) + '\n\n'
-        )
-        for ingredient, amount in ingredients.items():
-            cart_string = (
-                cart_string + ingredient + str(amount) + '\n'
-            )
-        return HttpResponse(cart_string, content_type='text/plain')
+         return services.get_shopping_cart(self.request.user)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -217,13 +187,19 @@ class SubscribeViewSet(CreateDeleteModelViewSet):
         return author_for_subscribe
 
     def delete(self, request, user_id, format=None):
-        author_for_unsubscribe = get_object_or_404(
+        author_for_unsubs = get_object_or_404(
             User, id=user_id
         )
-        subscribe = get_object_or_404(
-            Subscribe,
-            user=self.request.user,
-            subscribing=author_for_unsubscribe
-        )
+        try:
+            subscribe = get_object_or_404(
+                Subscribe,
+                user=self.request.user,
+                subscribing=author_for_unsubs
+            )
+        except Http404:
+            msg = f'Автор {author_for_unsubs} отсутствут в Ваших подписках.'
+            return Response(
+                {'errors': msg}, status=status.HTTP_400_BAD_REQUEST
+            )
         subscribe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

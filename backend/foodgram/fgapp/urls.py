@@ -1,8 +1,7 @@
-from django.conf.urls import url
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from fgapp.views import (HealthAPIView, RecipeViewSet, TagsViewSet,
+from fgapp.views import (RecipeViewSet, TagsViewSet,
                          IngredientViewSet, ShoppingCartViewSet,
                          SubscribeViewSet,
                          SubscriptionsViewSet, FavoriteRecipeViewSet)
@@ -34,7 +33,6 @@ recipes_router.register(
 )
 
 urlpatterns = [
-    url('health/', HealthAPIView.as_view(), name='health'),
     re_path(r'^auth/', include('djoser.urls.authtoken')),
     path('', include(recipes_router.urls)),
     path('', include('djoser.urls')),

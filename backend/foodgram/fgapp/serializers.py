@@ -2,7 +2,6 @@ from base64 import b64decode
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers 
-from rest_framework.validators import UniqueTogetherValidator
 import uuid
 
 from .models import (Recipe, Ingredient, Tag, RecipeIngredients, RecipeTags,
@@ -43,22 +42,15 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class GetIngredientsSerializer(serializers.ModelSerializer):
-    id = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
-    measurement_unit = serializers.SerializerMethodField()
+    id = serializers.IntegerField(source='ingredient.id')
+    name = serializers.CharField(source='ingredient.name')
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-    def get_id(self, obj):
-        return obj.ingredient.id
-
-    def get_name(self, obj):
-        return obj.ingredient.name
-
-    def get_measurement_unit(self, obj):
-        return obj.ingredient.measurement_unit
 
 
 class PostIngredientsSerializer(serializers.ModelSerializer):
@@ -67,13 +59,15 @@ class PostIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'amount')
-    
-    def validate_amount(self, value):
-        if value < 1:
+
+    def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
+        if data['amount'] <= 0:
             raise serializers.ValidationError(
-                'Убедитесь, что это значение больше либо равно 1.'
+                'Количество каждого ингредиента должно быть больше нуля.'
             )
-        return value
+        return data
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -130,38 +124,39 @@ class RecipePostSerializer(serializers.ModelSerializer):
         )
         model = Recipe
     
-    def validate_cooking_time(self, value):
-        if value < 1:
-            raise serializers.ValidationError(
-                'Убедитесь, что это значение больше либо равно 1.'
-            )
-        return value
-
-    def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags_id_list = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        for tag_id in tags_id_list:
-            RecipeTags.objects.create(
-                recipe=recipe,
-                tag=tag_id
-            )
-        for ingredient in ingredients:
+    def ingredients_tags_create(self, recipe, ingredients_data, tags_id_list):
+        tags_objs = [
+            RecipeTags(recipe=recipe, tag=tag_id)
+            for tag_id in tags_id_list
+        ]
+        RecipeTags.objects.bulk_create(tags_objs)
+        ingr_objs = []
+        for ingredient in ingredients_data:
             current_ingredient = get_object_or_404(
                 Ingredient,
                 id=ingredient['ingredient']
             )
             amount = ingredient['amount']
-            RecipeIngredients.objects.create(
-                ingredient=current_ingredient,
-                recipe=recipe,
-                amount=amount
+            ingr_objs.append(
+                RecipeIngredients(
+                    ingredient=current_ingredient,
+                    recipe=recipe,
+                    amount=amount
+                )
             )
+        RecipeIngredients.objects.bulk_create(ingr_objs)
+
+
+    def create(self, validated_data):
+        ingredients_data = validated_data.pop('ingredients')
+        tags_id_list = validated_data.pop('tags')
+        recipe = Recipe.objects.create(**validated_data)
+        self.ingredients_tags_create(recipe, ingredients_data, tags_id_list)
         return recipe
 
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
+        tags_id_list = validated_data.pop('tags')
         RecipeTags.objects.filter(recipe=instance).delete()
         RecipeIngredients.objects.filter(recipe=instance).delete()
         instance.image = validated_data.get('image', instance.image)
@@ -171,23 +166,33 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'cooking_time', instance.cooking_time
         )
         instance.save()
-        for tag in tags_data:
-            RecipeTags.objects.create(
-                recipe=instance,
-                tag=tag
-            )
-        for ingredient in ingredients_data:
-            current_ingredient = get_object_or_404(
-                Ingredient,
-                id=ingredient['ingredient']
-            )
-            amount = ingredient['amount']
-            RecipeIngredients.objects.create(
-                ingredient=current_ingredient,
-                recipe=instance,
-                amount=amount
-            )
+        self.ingredients_tags_create(instance, ingredients_data, tags_id_list)
         return instance
+
+    def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
+        if not data['ingredients']:
+            raise serializers.ValidationError(
+                'Для создания рецепта заполните ингредиенты.'
+            )
+        if not data['tags']:
+            raise serializers.ValidationError(
+                'Для создания рецепта заполните теги.'
+            )
+        if data['cooking_time'] <= 0:
+            raise serializers.ValidationError(
+                'Время приготовления должно быть больше нуля.'
+            )
+        unique_list = []
+        for ingr in data['ingredients']:
+            if ingr['ingredient'] in unique_list:
+                raise serializers.ValidationError(
+                'Устраните дублирующиеся ингредиенты.'
+            )
+            else:
+                unique_list.append(ingr['ingredient'])
+        return data
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -305,5 +310,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
         if user == subs:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
+            )
+        if Subscribe.objects.filter(user=user, subscribing=subs).exists():
+            raise serializers.ValidationError(
+                f'Вы уже подписаны на автора {subs}.'
             )
         return data

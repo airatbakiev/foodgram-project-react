@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from fgapp.models import (Recipe, RecipeIngredients, Tag, Ingredient, 
                           RecipeTags, FavoriteRecipe, ShoppingCart)
 from users.models import User, Subscribe
@@ -18,25 +19,31 @@ class SubscribeAdmin(admin.ModelAdmin):
     list_filter = ('user', 'subscribing',)
 
 
+class IngredientsInLine(admin.TabularInline):
+    model = RecipeIngredients
+
+
+class TagsInLine(admin.TabularInline):
+    model = RecipeTags
+
+
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = [IngredientsInLine, TagsInLine]
     list_display = ('pk', 'author', 'name', 'text', 'pub_date')
     search_fields = ('name',)
     list_filter = ('tags', 'author', 'name')
-    empty_value_display = '-пусто-'
 
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'slug')
     search_fields = ('name',)
     list_filter = ('slug',)
-    empty_value_display = '-пусто-'
 
 
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('measurement_unit', 'name')
-    empty_value_display = '-пусто-'
 
 
 class RecipeIngredientsAdmin(admin.ModelAdmin):
