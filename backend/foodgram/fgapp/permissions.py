@@ -16,6 +16,7 @@ class AuthorOrReadOnly(permissions.BasePermission):
             or view.action == 'retrieve'
         )
 
+
 class RecipeAuthor(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -48,9 +49,9 @@ class UserMeOrUserProfile(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user_me = bool(
-            request.user and
-            request.user.is_authenticated and
-            request.path_info == '/api/users/me/'
+            request.user
+            and request.user.is_authenticated
+            and request.path_info == '/api/users/me/'
         )
         user_profile = bool(
             request.path_info != '/api/users/me/'

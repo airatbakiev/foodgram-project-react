@@ -2,18 +2,19 @@ from django.http import HttpResponse
 
 from fgapp.models import RecipeIngredients
 
+
 def get_shopping_cart(user):
     '''Загрузка файла со списком покупок'''
     user_cart = user.shopping_carts.all()
     recipe_id_list = user_cart.values_list('recipe', flat=True)
     ingr_amounts = RecipeIngredients.objects.filter(
         recipe__in=recipe_id_list).select_related('ingredient')
-    unique_list=[]
+    unique_list = []
     ingredients = {}
     for item in ingr_amounts:
         name = (
-            item.ingredient.name + ' ('+
-            item.ingredient.measurement_unit + ') - '
+            item.ingredient.name + ' ('
+            + item.ingredient.measurement_unit + ') - '
         ).capitalize()
         if item.ingredient.id in unique_list:
             ingredients[name] += item.amount

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from fgapp.models import (Recipe, RecipeIngredients, Tag, Ingredient, 
+from fgapp.models import (Recipe, RecipeIngredients, Tag, Ingredient,
                           RecipeTags, FavoriteRecipe, ShoppingCart)
 from users.models import User, Subscribe
 

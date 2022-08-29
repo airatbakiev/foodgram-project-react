@@ -1,7 +1,7 @@
 from base64 import b64decode
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers 
+from rest_framework import serializers
 import uuid
 
 from .models import (Recipe, Ingredient, Tag, RecipeIngredients, RecipeTags,
@@ -21,14 +21,14 @@ class CustomImageField(serializers.Field):
             })
         format, imgstr = base64_string.split(';base64,')
         ext = format.split('/')[-1]
-        image_data = ContentFile(
+        return ContentFile(
             b64decode(imgstr), name=uuid.uuid4().hex + "." + ext
         )
-        return image_data 
+        # return image_data
 
 
 class TagSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = Tag
         fields = ('__all__')
@@ -80,10 +80,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'tags','author', 'ingredients', 'is_favorited',
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
-    
+
     def get_ingredients(self, obj):
         ingr_amounts = RecipeIngredients.objects.filter(
             recipe=obj
@@ -123,7 +123,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'ingredients', 'tags', 'image', 'name', 'text', 'cooking_time'
         )
         model = Recipe
-    
+
     def ingredients_tags_create(self, recipe, ingredients_data, tags_id_list):
         tags_objs = [
             RecipeTags(recipe=recipe, tag=tag_id)
@@ -145,7 +145,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 )
             )
         RecipeIngredients.objects.bulk_create(ingr_objs)
-
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
@@ -188,8 +187,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
         for ingr in data['ingredients']:
             if ingr['ingredient'] in unique_list:
                 raise serializers.ValidationError(
-                'Устраните дублирующиеся ингредиенты.'
-            )
+                    'Устраните дублирующиеся ингредиенты.'
+                )
             else:
                 unique_list.append(ingr['ingredient'])
         return data
@@ -215,7 +214,7 @@ class FavoriteRecipeSerializer(ShortRecipeSerializer):
             recipe=recipe_for_favorite
         )
         return recipe_for_favorite
-    
+
     def validate(self, data):
         if self.context['request'].method != 'POST':
             return data
@@ -241,7 +240,7 @@ class ShoppingCartSerializer(ShortRecipeSerializer):
             recipe=recipe_for_cart
         )
         return recipe_for_cart
-    
+
     def validate(self, data):
         if self.context['request'].method != 'POST':
             return data
@@ -300,7 +299,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             subscribing=author_for_subscribe
         )
         return author_for_subscribe
-    
+
     def validate(self, data):
         if self.context['request'].method != 'POST':
             return data

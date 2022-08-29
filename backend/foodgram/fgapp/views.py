@@ -56,10 +56,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             return queryset.filter(id__in=in_cart)
         return queryset
-    
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -73,7 +73,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
-    
+
     def partial_update(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = self.get_serializer(recipe, data=request.data)
@@ -86,9 +86,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             response_serializer.data, status=status.HTTP_200_OK
         )
 
-    @action(detail=False, permission_classes = [permissions.IsAuthenticated])
+    @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-         return services.get_shopping_cart(self.request.user)
+        return services.get_shopping_cart(self.request.user)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -112,10 +112,10 @@ class ShoppingCartViewSet(CreateDeleteModelViewSet):
     permission_classes = (RecipeAuthor,)
 
     def get_queryset(self):
-        recipe_for_cart = get_object_or_404(
+        return get_object_or_404(
             Recipe, id=self.kwargs.get('recipe_id')
         )
-        return recipe_for_cart
+        # return recipe_for_cart
 
     def delete(self, request, recipe_id, format=None):
         recipe = get_object_or_404(
@@ -141,10 +141,10 @@ class FavoriteRecipeViewSet(CreateDeleteModelViewSet):
     permission_classes = (RecipeAuthor,)
 
     def get_queryset(self):
-        recipe_for_favorite = get_object_or_404(
+        return get_object_or_404(
             Recipe, id=self.kwargs.get('recipe_id')
         )
-        return recipe_for_favorite
+        # return recipe_for_favorite
 
     def delete(self, request, recipe_id, format=None):
         recipe = get_object_or_404(
@@ -181,10 +181,10 @@ class SubscribeViewSet(CreateDeleteModelViewSet):
     permission_classes = (SubscribeOwner,)
 
     def get_queryset(self):
-        author_for_subscribe = get_object_or_404(
+        return get_object_or_404(
             User, id=self.kwargs.get('user_id')
         )
-        return author_for_subscribe
+        # return author_for_subscribe
 
     def delete(self, request, user_id, format=None):
         author_for_unsubs = get_object_or_404(
