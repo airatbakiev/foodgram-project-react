@@ -21,6 +21,7 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 class IngredientsInLine(admin.TabularInline):
     model = RecipeIngredients
+    min_num = 1
 
 
 class TagsInLine(admin.TabularInline):
