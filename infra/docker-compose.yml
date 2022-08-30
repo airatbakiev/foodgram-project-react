@@ -9,8 +9,7 @@ services:
       - ./.env
 
   web:
-    build:
-      context: ../backend/foodgram
+    image: bakievdocker/foodgram:latest
     restart: always
     volumes:
       - backend_static:/app/backend_static/
