@@ -18,8 +18,6 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://bakiev.ddns.net']
-
 
 # Application definition
 
