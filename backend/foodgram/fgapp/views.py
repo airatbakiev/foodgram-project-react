@@ -115,7 +115,6 @@ class ShoppingCartViewSet(CreateDeleteModelViewSet):
         return get_object_or_404(
             Recipe, id=self.kwargs.get('recipe_id')
         )
-        # return recipe_for_cart
 
     def delete(self, request, recipe_id, format=None):
         recipe = get_object_or_404(
@@ -144,7 +143,6 @@ class FavoriteRecipeViewSet(CreateDeleteModelViewSet):
         return get_object_or_404(
             Recipe, id=self.kwargs.get('recipe_id')
         )
-        # return recipe_for_favorite
 
     def delete(self, request, recipe_id, format=None):
         recipe = get_object_or_404(
@@ -184,7 +182,6 @@ class SubscribeViewSet(CreateDeleteModelViewSet):
         return get_object_or_404(
             User, id=self.kwargs.get('user_id')
         )
-        # return author_for_subscribe
 
     def delete(self, request, user_id, format=None):
         author_for_unsubs = get_object_or_404(

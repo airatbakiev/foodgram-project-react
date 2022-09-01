@@ -39,8 +39,7 @@ class Recipe(models.Model):
     name = models.CharField('Название', max_length=200)
     image = models.ImageField(
         'Фото',
-        upload_to='fgapp/media/',
-        blank=True
+        upload_to='fgapp/media/'
     )
     text = models.TextField('Описание')
     ingredients = models.ManyToManyField(
@@ -50,8 +49,7 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        through='RecipeTags',
-        blank=True
+        through='RecipeTags'
     )
     cooking_time = models.IntegerField(
         'Время приготовления',
