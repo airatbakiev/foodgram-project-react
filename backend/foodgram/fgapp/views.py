@@ -77,7 +77,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = self.get_serializer(recipe, data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid()
         self.perform_update(serializer)
         response_serializer = RecipeGetSerializer(
             instance=serializer.instance

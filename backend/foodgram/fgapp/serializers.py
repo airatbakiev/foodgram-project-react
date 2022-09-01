@@ -24,7 +24,6 @@ class CustomImageField(serializers.Field):
         return ContentFile(
             b64decode(imgstr), name=uuid.uuid4().hex + "." + ext
         )
-        # return image_data
 
 
 class TagSerializer(serializers.ModelSerializer):
