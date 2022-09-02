@@ -157,6 +157,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         tags_id_list = validated_data.pop('tags')
         RecipeTags.objects.filter(recipe=instance).delete()
         RecipeIngredients.objects.filter(recipe=instance).delete()
+        self.ingredients_tags_create(instance, ingredients_data, tags_id_list)
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
@@ -164,7 +165,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'cooking_time', instance.cooking_time
         )
         instance.save()
-        self.ingredients_tags_create(instance, ingredients_data, tags_id_list)
         return instance
 
     def validate(self, data):
