@@ -12,10 +12,6 @@ from users.serializers import CustomUserSerializer
 
 class CustomImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        # if not base64_string:
-        #     raise serializers.ValidationError({
-        #         'score': 'This field is required.'
-        #     })
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
@@ -164,7 +160,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'cooking_time', instance.cooking_time
         )
         instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
     def validate(self, data):
         if self.context['request'].method != 'POST':
