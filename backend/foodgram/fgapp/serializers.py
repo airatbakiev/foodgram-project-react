@@ -111,7 +111,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
-    image = CustomImageField(required=False, allow_null=True)
+    image = CustomImageField(allow_null=True)
 
     class Meta:
         fields = (
