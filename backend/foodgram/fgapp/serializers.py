@@ -1,4 +1,5 @@
 from base64 import b64decode
+from typing_extensions import Required
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -110,7 +111,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
-    image = CustomImageField()
+    image = CustomImageField(required=False, allow_null=True)
 
     class Meta:
         fields = (
