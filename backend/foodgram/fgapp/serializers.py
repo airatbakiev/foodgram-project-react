@@ -10,20 +10,19 @@ from users.models import User, Subscribe
 from users.serializers import CustomUserSerializer
 
 
-class CustomImageField(serializers.Field):
-    def to_representation(self, value):
-        return value
-
-    def to_internal_value(self, base64_string):
-        if not base64_string:
-            raise serializers.ValidationError({
-                'score': 'This field is required.'
-            })
-        format, imgstr = base64_string.split(';base64,')
-        ext = format.split('/')[-1]
-        return ContentFile(
-            b64decode(imgstr), name=uuid.uuid4().hex + "." + ext
-        )
+class CustomImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        # if not base64_string:
+        #     raise serializers.ValidationError({
+        #         'score': 'This field is required.'
+        #     })
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            return ContentFile(
+                b64decode(imgstr), name=uuid.uuid4().hex + "." + ext
+            )
+        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
