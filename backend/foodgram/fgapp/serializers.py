@@ -1,5 +1,4 @@
 from base64 import b64decode
-from typing_extensions import Required
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
